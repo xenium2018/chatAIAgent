@@ -4,13 +4,13 @@
   "Metadata": {
     "entryPointPosition": { "x": 20, "y": 20 },
     "ActionMetadata": {
-      "welcome-message":    { "position": { "x": 20,   "y": 20  } },
-      "ai-agent-block":     { "position": { "x": 250,  "y": 20  } },
-      "set-policy-number":  { "position": { "x": 500,  "y": 20  } },
-      "invoke-lambda":      { "position": { "x": 750,  "y": 20  } },
-      "success-response":   { "position": { "x": 1000, "y": 20  } },
-      "error-response":     { "position": { "x": 1000, "y": 150 } },
-      "disconnect":         { "position": { "x": 1250, "y": 20  } }
+      "welcome-message":   { "position": { "x": 20,   "y": 20  } },
+      "ai-agent-block":    { "position": { "x": 250,  "y": 20  } },
+      "set-policy-number": { "position": { "x": 500,  "y": 20  } },
+      "invoke-lambda":     { "position": { "x": 750,  "y": 20  } },
+      "success-response":  { "position": { "x": 1000, "y": 20  } },
+      "error-response":    { "position": { "x": 1000, "y": 150 } },
+      "disconnect":        { "position": { "x": 1250, "y": 20  } }
     }
   },
   "Actions": [
@@ -32,26 +32,10 @@
         "AIAgent": {
           "Type": "SELF_SERVICE",
           "SelfServiceAIAgentId": "<connect_ai_agent_id>"
-        },
+        }
       },
       "Transitions": {
         "NextAction": "set-policy-number",
-        "Conditions": [
-          {
-            "NextAction": "set-policy-number",
-            "Condition": {
-              "Operator": "Equals",
-              "Operands": ["$.Lex.IntentName", "CapturePolicyNumber"]
-            }
-          },
-          {
-            "NextAction": "error-response",
-            "Condition": {
-              "Operator": "Equals",
-              "Operands": ["$.Lex.IntentName", "FallbackIntent"]
-            }
-          }
-        ],
         "Errors": [
           { "NextAction": "error-response", "ErrorType": "NoMatchingError" },
           { "NextAction": "error-response", "ErrorType": "TimedOut" }
@@ -63,7 +47,7 @@
       "Type": "UpdateContactAttributes",
       "Parameters": {
         "Attributes": {
-          "policyNumber": "$.Lex.Slots.policyNumber"
+          "policyNumber": "$.AIAgent.Slots.policyNumber"
         }
       },
       "Transitions": {
