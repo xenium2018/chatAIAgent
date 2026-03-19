@@ -11,8 +11,7 @@
       "11111111-1111-1111-1111-111111111003": { "position": { "x": 500,  "y": 20  } },
       "11111111-1111-1111-1111-111111111004": { "position": { "x": 750,  "y": 20  } },
       "11111111-1111-1111-1111-111111111005": { "position": { "x": 1000, "y": 20  } },
-      "11111111-1111-1111-1111-111111111006": { "position": { "x": 1000, "y": 150 } },
-      "11111111-1111-1111-1111-111111111007": { "position": { "x": 1250, "y": 20  } }
+      "11111111-1111-1111-1111-111111111006": { "position": { "x": 1250, "y": 20  } }
     }
   },
   "Actions": [
@@ -30,48 +29,59 @@
     },
     {
       "Identifier": "11111111-1111-1111-1111-111111111002",
-      "Type": "UpdateContactAttributes",
+      "Type": "GetParticipantInput",
       "Parameters": {
-        "Attributes": {
-          "aiAgentId": "<connect_ai_agent_id>"
+        "Text": "Please provide your policy number.",
+        "Timeout": "120",
+        "LexV2Bot": {
+          "AliasArn": "arn:aws:lex:<region>:<account_id>:bot-alias/<bot_id>/<alias_id>"
         }
       },
       "Transitions": {
         "NextAction": "11111111-1111-1111-1111-111111111003",
-        "Errors": [],
-        "Conditions": []
+        "Errors": [
+          { "NextAction": "11111111-1111-1111-1111-111111111005", "ErrorType": "NoMatchingError" },
+          { "NextAction": "11111111-1111-1111-1111-111111111005", "ErrorType": "TimedOut" }
+        ],
+        "Conditions": [
+          {
+            "NextAction": "11111111-1111-1111-1111-111111111003",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": ["$.Lex.IntentName", "CapturePolicyNumber"]
+            }
+          }
+        ]
       }
     },
     {
       "Identifier": "11111111-1111-1111-1111-111111111003",
-      "Type": "ConnectParticipantWithAIAgent",
+      "Type": "InvokeLambdaFunction",
       "Parameters": {
-        "AIAgentId": "<connect_ai_agent_id>"
+        "LambdaFunctionARN": "arn:aws:lambda:<region>:<account_id>:function:policy_handler",
+        "InvocationTimeLimitSeconds": "8",
+        "LambdaInvocationAttributes": {
+          "policyNumber": "$.Lex.Slots.policyNumber"
+        }
       },
       "Transitions": {
         "NextAction": "11111111-1111-1111-1111-111111111004",
         "Errors": [
-          { "NextAction": "11111111-1111-1111-1111-111111111006", "ErrorType": "NoMatchingError" }
+          { "NextAction": "11111111-1111-1111-1111-111111111005", "ErrorType": "NoMatchingError" },
+          { "NextAction": "11111111-1111-1111-1111-111111111005", "ErrorType": "TimedOut" }
         ],
         "Conditions": []
       }
     },
     {
       "Identifier": "11111111-1111-1111-1111-111111111004",
-      "Type": "InvokeLambdaFunction",
+      "Type": "MessageParticipant",
       "Parameters": {
-        "LambdaFunctionARN": "arn:aws:lambda:<region>:<account_id>:function:policy_handler",
-        "InvocationTimeLimitSeconds": "8",
-        "LambdaInvocationAttributes": {
-          "policyNumber": "$.Attributes.policyNumber"
-        }
+        "Text": "Thank you! Your policy has been found and is being processed."
       },
       "Transitions": {
-        "NextAction": "11111111-1111-1111-1111-111111111005",
-        "Errors": [
-          { "NextAction": "11111111-1111-1111-1111-111111111006", "ErrorType": "NoMatchingError" },
-          { "NextAction": "11111111-1111-1111-1111-111111111006", "ErrorType": "TimedOut" }
-        ],
+        "NextAction": "11111111-1111-1111-1111-111111111006",
+        "Errors": [],
         "Conditions": []
       }
     },
@@ -79,28 +89,16 @@
       "Identifier": "11111111-1111-1111-1111-111111111005",
       "Type": "MessageParticipant",
       "Parameters": {
-        "Text": "Thank you! Your policy has been found and is being processed."
+        "Text": "I'm sorry, I could not process your request. Please try again or contact support."
       },
       "Transitions": {
-        "NextAction": "11111111-1111-1111-1111-111111111007",
+        "NextAction": "11111111-1111-1111-1111-111111111006",
         "Errors": [],
         "Conditions": []
       }
     },
     {
       "Identifier": "11111111-1111-1111-1111-111111111006",
-      "Type": "MessageParticipant",
-      "Parameters": {
-        "Text": "I'm sorry, I could not process your request. Please try again or contact support."
-      },
-      "Transitions": {
-        "NextAction": "11111111-1111-1111-1111-111111111007",
-        "Errors": [],
-        "Conditions": []
-      }
-    },
-    {
-      "Identifier": "11111111-1111-1111-1111-111111111007",
       "Type": "DisconnectParticipant",
       "Parameters": {},
       "Transitions": {}
