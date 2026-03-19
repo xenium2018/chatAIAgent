@@ -1,56 +1,73 @@
-# chatAIAgent
+# chatAIAgent — Payment Status Chatbot
 
-Chat AI Agent using Amazon Connect AI Agent + AWS Lambda.
+Gen AI chatbot for payment status using **Amazon Lex V2 + Bedrock (Claude 3 Haiku) + Amazon Connect**.
 
 ## Architecture
 
 ```
-User (Chat) → Amazon Connect → AI Agent (collects policy number) → contact attribute → Lambda
+User (Chat) → Amazon Connect → Lex V2 Bot → Lambda (payment lookup)
+                                    ↓
+                          Bedrock Claude 3 Haiku (QnAIntent / fallback)
 ```
 
 ## How It Works
 
 1. User starts a chat via Amazon Connect
-2. **Connect AI Agent** conversationally collects the policy number
-3. AI Agent stores the policy number as a contact attribute
-4. Lambda is invoked with the policy number for further processing
+2. Connect routes to the Lex V2 bot via `GetParticipantInput` block
+3. Lex detects `CheckPaymentStatus` intent and collects the policy number slot
+4. Lambda fulfillment looks up payment data and returns a natural language response
+5. For unrecognised inputs, Lex falls back to Bedrock Claude 3 Haiku (QnAIntent)
 
 ## Project Structure
 
 ```
 ├── lambda/
-│   └── policy_handler.js       # Processes the policy number (Node.js 20.x)
+│   └── payment_handler.js              # Lex V2 fulfillment Lambda (Node.js 20.x)
 ├── connect/
-│   ├── contact_flow.json       # Amazon Connect chat flow
-│   └── action_group/
-│       └── api_schema.yaml     # OpenAPI schema for the AI Agent action group
+│   ├── contact_flow.json               # Amazon Connect chat flow (GetParticipantInput → Lex)
+│   ├── ai_agent_prompt.txt             # Bedrock system prompt (QnAIntent)
+│   └── lex_bot.json                    # Lex bot definition reference
+├── infra/
+│   └── deploy.sh                       # AWS CLI deployment script
 ```
 
-## Setup Steps
+## Deployment
 
-### 1. Deploy Lambda
-- Create a Lambda function named `policy_handler`.
-- Upload `lambda/policy_handler.js` as the function code.
-- Set runtime to **Node.js 20.x** and handler to `policy_handler.handler`.
+### Prerequisites
+- AWS CLI configured with sufficient permissions
+- Amazon Connect instance already created
+- Bedrock model access enabled for `anthropic.claude-3-haiku-20240307-v1:0` in `us-east-1`
+- `zip` and `python3` available in your shell
 
-### 2. Create Amazon Connect AI Agent
-- Go to **Amazon Connect Console** → AI Agents → Create AI Agent.
-- Select type: **Self-service**.
-- Set the agent prompt:
-  > _"You are a helpful insurance policy assistant. Ask the user for their policy number. Once provided, save it as a contact attribute named policyNumber."_
-- Note the `<connect_ai_agent_id>`.
+### Steps
 
-### 3. Import Contact Flow
-- Go to **Amazon Connect Console** → Contact Flows → Import.
-- Upload `connect/contact_flow.json`.
-- Replace placeholders: `<region>`, `<account_id>`, `<connect_ai_agent_id>`.
-- Associate the flow with your chat widget.
+```bash
+# 1. Enable Claude 3 Haiku in AWS Console
+#    Bedrock → Model access → Request access → Claude 3 Haiku
+
+# 2. Set your Connect instance ID in infra/deploy.sh
+#    Replace: CONNECT_INSTANCE_ID="<connect_instance_id>"
+
+# 3. Run the deploy script
+cd infra
+bash deploy.sh
+
+# 4. Import the generated contact flow
+#    Connect Console → Contact Flows → Import → /tmp/contact_flow_final.json
+
+# 5. Associate the flow with your chat widget
+```
+
+## Mock Payment Data
+
+| Policy Number | Status  | Amount    | Due Date   | Last Payment |
+|---------------|---------|-----------|------------|--------------|
+| POL-001       | Paid    | $1,200.00 | 2025-06-01 | 2025-05-01   |
+| POL-002       | Pending | $850.00   | 2025-06-15 | 2025-04-15   |
+| POL-003       | Overdue | $2,100.00 | 2025-05-01 | 2025-03-01   |
 
 ## Placeholders to Replace
 
-| Placeholder             | Description                          |
-|-------------------------|--------------------------------------|
-| `<account_id>`          | Your AWS account ID                  |
-| `<region>`              | AWS region (e.g. `us-east-1`)        |
-| `<connect_ai_agent_id>` | Amazon Connect AI Agent ID           |
-| `<customer_name>`       | Replace in Lambda with real DB lookup|
+| Placeholder              | Where             | Description                     |
+|--------------------------|-------------------|---------------------------------|
+| `<connect_instance_id>`  | `infra/deploy.sh` | Your Amazon Connect instance ID |

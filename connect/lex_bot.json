@@ -1,0 +1,7 @@
+{
+  "botName": "PaymentStatusBot",
+  "description": "Payment status chatbot with Bedrock QnAIntent",
+  "roleArn": "<lex_role_arn>",
+  "dataPrivacy": { "childDirected": false },
+  "idleSessionTTLInSeconds": 300
+}

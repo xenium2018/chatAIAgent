@@ -1,13 +1,13 @@
 openapi: "3.0.0"
 info:
-  title: PolicyHandler
+  title: PaymentStatusHandler
   version: "1.0"
 paths:
-  /lookupPolicy:
+  /getPaymentStatus:
     post:
-      summary: Look up a policy by policy number
-      description: Retrieves policy details when the user provides their policy number
-      operationId: lookupPolicy
+      summary: Get payment status by policy number
+      description: Returns the payment status, amount due, and last payment date for a given policy number
+      operationId: getPaymentStatus
       requestBody:
         required: true
         content:
@@ -19,10 +19,10 @@ paths:
               properties:
                 policyNumber:
                   type: string
-                  description: The customer's insurance policy number
+                  description: The customer's policy number (e.g. POL-001)
       responses:
         "200":
-          description: Policy details retrieved successfully
+          description: Payment status retrieved successfully
           content:
             application/json:
               schema:
@@ -30,9 +30,13 @@ paths:
                 properties:
                   policyNumber:
                     type: string
-                  policyStatus:
+                  status:
                     type: string
-                  holder:
+                  amount:
                     type: string
-        "400":
-          description: Policy number not provided
+                  dueDate:
+                    type: string
+                  lastPayment:
+                    type: string
+        "404":
+          description: Policy number not found

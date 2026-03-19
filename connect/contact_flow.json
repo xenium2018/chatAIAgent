@@ -1,17 +1,15 @@
 {
   "Version": "2019-10-30",
   "Type": "contactFlow",
-  "Name": "PolicyAssistantChatFlow",
+  "Name": "PaymentStatusChatFlow",
   "StartAction": "11111111-1111-1111-1111-111111111001",
   "Metadata": {
     "entryPointPosition": { "x": 20, "y": 20 },
     "ActionMetadata": {
-      "11111111-1111-1111-1111-111111111001": { "position": { "x": 20,   "y": 20  } },
-      "11111111-1111-1111-1111-111111111002": { "position": { "x": 250,  "y": 20  } },
-      "11111111-1111-1111-1111-111111111003": { "position": { "x": 500,  "y": 20  } },
-      "11111111-1111-1111-1111-111111111004": { "position": { "x": 750,  "y": 20  } },
-      "11111111-1111-1111-1111-111111111005": { "position": { "x": 1000, "y": 20  } },
-      "11111111-1111-1111-1111-111111111006": { "position": { "x": 1250, "y": 20  } }
+      "11111111-1111-1111-1111-111111111001": { "position": { "x": 20,  "y": 20 } },
+      "11111111-1111-1111-1111-111111111002": { "position": { "x": 300, "y": 20 } },
+      "11111111-1111-1111-1111-111111111003": { "position": { "x": 580, "y": 20 } },
+      "11111111-1111-1111-1111-111111111004": { "position": { "x": 860, "y": 20 } }
     }
   },
   "Actions": [
@@ -19,7 +17,7 @@
       "Identifier": "11111111-1111-1111-1111-111111111001",
       "Type": "MessageParticipant",
       "Parameters": {
-        "Text": "Welcome! I am your AI Policy Assistant. How can I help you today?"
+        "Text": "Welcome to the Payment Status Assistant. I will help you check your payment details."
       },
       "Transitions": {
         "NextAction": "11111111-1111-1111-1111-111111111002",
@@ -29,63 +27,36 @@
     },
     {
       "Identifier": "11111111-1111-1111-1111-111111111002",
-      "Type": "ConnectParticipantWithAIAgent",
+      "Type": "GetParticipantInput",
       "Parameters": {
-        "AIAgentId": "<connect_ai_agent_id>"
+        "Text": "How can I help you today?",
+        "LexV2Bot": {
+          "AliasArn": "arn:aws:lex:us-east-1:<account_id>:bot-alias/<bot_id>/<bot_alias_id>"
+        }
       },
       "Transitions": {
         "NextAction": "11111111-1111-1111-1111-111111111003",
         "Errors": [
-          { "NextAction": "11111111-1111-1111-1111-111111111005", "ErrorType": "NoMatchingError" }
+          { "NextAction": "11111111-1111-1111-1111-111111111003", "ErrorType": "NoMatchingError" },
+          { "NextAction": "11111111-1111-1111-1111-111111111003", "ErrorType": "TimedOut" }
         ],
         "Conditions": []
       }
     },
     {
       "Identifier": "11111111-1111-1111-1111-111111111003",
-      "Type": "InvokeLambdaFunction",
+      "Type": "MessageParticipant",
       "Parameters": {
-        "LambdaFunctionARN": "arn:aws:lambda:<region>:<account_id>:function:policy_handler",
-        "InvocationTimeLimitSeconds": "8",
-        "LambdaInvocationAttributes": {
-          "policyNumber": "$.Attributes.policyNumber"
-        }
+        "Text": "Thank you for contacting us. Goodbye!"
       },
       "Transitions": {
         "NextAction": "11111111-1111-1111-1111-111111111004",
-        "Errors": [
-          { "NextAction": "11111111-1111-1111-1111-111111111005", "ErrorType": "NoMatchingError" },
-          { "NextAction": "11111111-1111-1111-1111-111111111005", "ErrorType": "TimedOut" }
-        ],
+        "Errors": [],
         "Conditions": []
       }
     },
     {
       "Identifier": "11111111-1111-1111-1111-111111111004",
-      "Type": "MessageParticipant",
-      "Parameters": {
-        "Text": "Thank you! Your policy has been found and is being processed."
-      },
-      "Transitions": {
-        "NextAction": "11111111-1111-1111-1111-111111111006",
-        "Errors": [],
-        "Conditions": []
-      }
-    },
-    {
-      "Identifier": "11111111-1111-1111-1111-111111111005",
-      "Type": "MessageParticipant",
-      "Parameters": {
-        "Text": "I'm sorry, I could not process your request. Please try again or contact support."
-      },
-      "Transitions": {
-        "NextAction": "11111111-1111-1111-1111-111111111006",
-        "Errors": [],
-        "Conditions": []
-      }
-    },
-    {
-      "Identifier": "11111111-1111-1111-1111-111111111006",
       "Type": "DisconnectParticipant",
       "Parameters": {},
       "Transitions": {}
