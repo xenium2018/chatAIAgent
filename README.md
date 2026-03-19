@@ -12,7 +12,7 @@ User (Chat) → Amazon Connect → Lex V2 AI Agent → Collects Policy Number �
 
 ```
 ├── lambda/
-│   └── policy_handler.py       # Processes the policy number
+│   └── policy_handler.js       # Processes the policy number
 ├── lex/
 │   └── bot_definition.json     # Lex V2 bot with CapturePolicyNumber intent + FallbackIntent (AI Agent)
 ├── connect/
@@ -23,7 +23,8 @@ User (Chat) → Amazon Connect → Lex V2 AI Agent → Collects Policy Number �
 
 ### 1. Deploy Lambda
 - Create a Lambda function named `policy_handler` in your AWS account.
-- Upload `lambda/policy_handler.py` as the function code.
+- Upload `lambda/policy_handler.js` as the function code.
+- Set the runtime to **Node.js 20.x** and handler to `policy_handler.handler`.
 - Add the Lambda ARN to `lex/bot_definition.json` and `connect/contact_flow.json`.
 
 ### 2. Create Lex V2 Bot
