@@ -1,43 +1,48 @@
 {
   "Version": "2019-10-30",
-  "StartAction": "start-chat-block",
+  "StartAction": "welcome-message",
   "Metadata": {
     "entryPointPosition": { "x": 20, "y": 20 },
     "ActionMetadata": {
-      "start-chat-block":       { "position": { "x": 20,  "y": 20  } },
-      "get-customer-input":     { "position": { "x": 250, "y": 20  } },
-      "invoke-lambda":          { "position": { "x": 500, "y": 20  } },
-      "success-response":       { "position": { "x": 750, "y": 20  } },
-      "error-response":         { "position": { "x": 750, "y": 150 } },
-      "disconnect":             { "position": { "x": 1000,"y": 20  } }
+      "welcome-message":    { "position": { "x": 20,   "y": 20  } },
+      "ai-agent-block":     { "position": { "x": 250,  "y": 20  } },
+      "set-policy-number":  { "position": { "x": 500,  "y": 20  } },
+      "invoke-lambda":      { "position": { "x": 750,  "y": 20  } },
+      "success-response":   { "position": { "x": 1000, "y": 20  } },
+      "error-response":     { "position": { "x": 1000, "y": 150 } },
+      "disconnect":         { "position": { "x": 1250, "y": 20  } }
     }
   },
   "Actions": [
     {
-      "Identifier": "start-chat-block",
+      "Identifier": "welcome-message",
       "Type": "MessageParticipant",
       "Parameters": {
-        "Text": "Welcome! I am your AI Policy Assistant. I can help you with your insurance policy."
+        "Text": "Welcome! I am your AI Policy Assistant powered by Amazon Connect AI Agent. How can I help you today?"
       },
       "Transitions": {
-        "NextAction": "get-customer-input"
+        "NextAction": "ai-agent-block"
       }
     },
     {
-      "Identifier": "get-customer-input",
+      "Identifier": "ai-agent-block",
       "Type": "GetParticipantInput",
       "Parameters": {
-        "Text": "Please provide your policy number to get started.",
+        "Text": "Please tell me your policy number and I will look it up for you.",
         "LexV2Bot": {
           "AliasArn": "arn:aws:lex:<region>:<account_id>:bot-alias/<bot_id>/<alias_id>"
         },
-        "Timeout": "120"
+        "Timeout": "120",
+        "AIAgent": {
+          "Type": "SELF_SERVICE",
+          "SelfServiceAIAgentId": "<connect_ai_agent_id>"
+        }
       },
       "Transitions": {
-        "NextAction": "invoke-lambda",
+        "NextAction": "set-policy-number",
         "Conditions": [
           {
-            "NextAction": "invoke-lambda",
+            "NextAction": "set-policy-number",
             "Condition": {
               "Operator": "Equals",
               "Operands": ["$.Lex.IntentName", "CapturePolicyNumber"]
@@ -58,13 +63,25 @@
       }
     },
     {
+      "Identifier": "set-policy-number",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "Attributes": {
+          "policyNumber": "$.Lex.Slots.policyNumber"
+        }
+      },
+      "Transitions": {
+        "NextAction": "invoke-lambda"
+      }
+    },
+    {
       "Identifier": "invoke-lambda",
       "Type": "InvokeLambdaFunction",
       "Parameters": {
         "LambdaFunctionARN": "arn:aws:lambda:<region>:<account_id>:function:policy_handler",
         "InvocationTimeLimitSeconds": "8",
         "LambdaInvocationAttributes": {
-          "policyNumber": "$.Lex.Slots.policyNumber"
+          "policyNumber": "$.Attributes.policyNumber"
         }
       },
       "Transitions": {
@@ -79,7 +96,7 @@
       "Identifier": "success-response",
       "Type": "MessageParticipant",
       "Parameters": {
-        "Text": "Thank you! Your policy has been found. Our team will assist you shortly."
+        "Text": "Thank you! Your policy has been found and is being processed. Our team will assist you shortly."
       },
       "Transitions": {
         "NextAction": "disconnect"

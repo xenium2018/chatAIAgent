@@ -1,6 +1,6 @@
 {
   "name": "PolicyAssistantBot",
-  "description": "AI Agent bot that collects a policy number from the user",
+  "description": "AI Agent bot using Amazon Connect AI Agent (Bedrock) to collect policy number",
   "roleArn": "arn:aws:iam::<account_id>:role/LexBotRole",
   "dataPrivacy": { "childDirected": false },
   "idleSessionTTLInSeconds": 300,
@@ -8,34 +8,69 @@
     {
       "localeId": "en_US",
       "nluConfidenceThreshold": 0.40,
-      "description": "English locale",
+      "generativeAISettings": {
+        "buildtimeSettings": {
+          "descriptiveBotBuilder": { "enabled": true },
+          "sampleUtteranceGeneration": { "enabled": true }
+        },
+        "runtimeSettings": {
+          "slotResolutionImprovement": { "enabled": true }
+        }
+      },
       "intents": [
         {
           "name": "CapturePolicyNumber",
-          "description": "Collects the policy number from the user",
+          "description": "AI Agent collects the policy number conversationally",
           "sampleUtterances": [
+            { "utterance": "I need help with my policy" },
+            { "utterance": "Check my policy" },
             { "utterance": "My policy number is {policyNumber}" },
-            { "utterance": "I have policy {policyNumber}" },
-            { "utterance": "Policy {policyNumber}" },
             { "utterance": "{policyNumber}" }
           ],
           "slots": [
             {
               "name": "policyNumber",
               "slotTypeName": "AMAZON.AlphaNumeric",
+              "description": "The customer's insurance policy number",
               "valueElicitationSetting": {
                 "slotConstraint": "Required",
+                "slotCaptureSetting": {
+                  "captureConditional": {},
+                  "captureResponse": {
+                    "messageGroups": [
+                      {
+                        "message": {
+                          "plainTextMessage": {
+                            "value": "Got it! I have your policy number as {policyNumber}."
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "failureResponse": {
+                    "messageGroups": [
+                      {
+                        "message": {
+                          "plainTextMessage": {
+                            "value": "I didn't catch that. Could you please repeat your policy number?"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
                 "promptSpecification": {
                   "messageGroups": [
                     {
                       "message": {
                         "plainTextMessage": {
-                          "value": "Please provide your policy number."
+                          "value": "Sure, I can help with that. Could you please provide your policy number?"
                         }
                       }
                     }
                   ],
-                  "maxRetries": 3
+                  "maxRetries": 3,
+                  "allowInterrupt": true
                 }
               }
             }
@@ -46,19 +81,20 @@
                 {
                   "message": {
                     "plainTextMessage": {
-                      "value": "I have your policy number as {policyNumber}. Is that correct?"
+                      "value": "Just to confirm, your policy number is {policyNumber}. Is that correct?"
                     }
                   }
                 }
               ],
-              "maxRetries": 2
+              "maxRetries": 2,
+              "allowInterrupt": true
             },
             "declinationResponse": {
               "messageGroups": [
                 {
                   "message": {
                     "plainTextMessage": {
-                      "value": "Let me ask again. Please provide your policy number."
+                      "value": "No problem, let me ask again. Please provide your policy number."
                     }
                   }
                 }
@@ -70,32 +106,34 @@
         },
         {
           "name": "FallbackIntent",
-          "description": "Handles unrecognized input using the AI agent",
+          "description": "Amazon Connect AI Agent handles all other conversation using Bedrock",
           "parentIntentSignature": "AMAZON.FallbackIntent",
           "initialResponseSetting": {
             "codeHook": {
               "enableCodeHookInvocation": true,
               "isActive": true,
-              "invocationLabel": "AI_Agent_Fallback",
+              "invocationLabel": "ConnectAIAgent",
               "postCodeHookSpecification": {}
             }
           }
         }
-      ],
-      "slotTypes": []
+      ]
     }
   ],
-  "testBotAliasSettings": {
-    "botAliasLocaleSettings": {
-      "en_US": {
-        "enabled": true,
-        "codeHookSpecification": {
-          "lambdaCodeHook": {
-            "lambdaARN": "arn:aws:lambda:<region>:<account_id>:function:policy_handler",
-            "codeHookInterfaceVersion": "1.0"
-          }
+  "botAliasLocaleSettings": {
+    "en_US": {
+      "enabled": true,
+      "codeHookSpecification": {
+        "lambdaCodeHook": {
+          "lambdaARN": "arn:aws:lambda:<region>:<account_id>:function:policy_handler",
+          "codeHookInterfaceVersion": "1.0"
         }
       }
     }
+  },
+  "aiAgentConfiguration": {
+    "type": "QNAMAKER",
+    "aiAgentResourceArn": "arn:aws:bedrock:<region>:<account_id>:agent-alias/<bedrock_agent_id>/<bedrock_agent_alias_id>",
+    "description": "Amazon Connect AI Agent powered by Amazon Bedrock for conversational policy assistance"
   }
 }
