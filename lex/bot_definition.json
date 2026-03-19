@@ -106,16 +106,13 @@
         },
         {
           "name": "FallbackIntent",
-          "description": "Amazon Connect AI Agent handles all other conversation",
-          "parentIntentSignature": "AMAZON.FallbackIntent",
-          "initialResponseSetting": {
-            "codeHook": {
-              "enableCodeHookInvocation": true,
-              "isActive": true,
-              "invocationLabel": "ConnectAIAgent",
-              "postCodeHookSpecification": {}
-            }
-          }
+          "description": "Fallback to AI Agent for unrecognized input",
+          "parentIntentSignature": "AMAZON.FallbackIntent"
+        },
+        {
+          "name": "QnAIntent",
+          "description": "AI Agent intent powered by Amazon Connect AI Agent",
+          "parentIntentSignature": "AMAZON.QnAIntent"
         }
       ]
     }
@@ -129,6 +126,14 @@
           "codeHookInterfaceVersion": "1.0"
         }
       }
+    }
+  },
+  "qnAIntentConfiguration": {
+    "dataSourceConfiguration": {
+      "kendraConfiguration": null
+    },
+    "bedrockModelConfiguration": {
+      "modelArn": "arn:aws:bedrock:<region>::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0"
     }
   }
 }
