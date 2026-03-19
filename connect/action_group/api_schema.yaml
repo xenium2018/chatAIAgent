@@ -1,0 +1,38 @@
+openapi: "3.0.0"
+info:
+  title: PolicyHandler
+  version: "1.0"
+paths:
+  /lookupPolicy:
+    post:
+      summary: Look up a policy by policy number
+      description: Retrieves policy details when the user provides their policy number
+      operationId: lookupPolicy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - policyNumber
+              properties:
+                policyNumber:
+                  type: string
+                  description: The customer's insurance policy number
+      responses:
+        "200":
+          description: Policy details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  policyNumber:
+                    type: string
+                  policyStatus:
+                    type: string
+                  holder:
+                    type: string
+        "400":
+          description: Policy number not provided

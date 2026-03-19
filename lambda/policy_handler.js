@@ -1,46 +1,43 @@
 exports.handler = async (event) => {
-    // Called by Lex fulfillment hook from AI Agent
-    const sessionAttributes = event?.sessionAttributes || {};
-    const slots = event?.currentIntent?.slots || {};
+    console.log("Event:", JSON.stringify(event, null, 2));
 
-    // AI Agent passes extracted policy number either via slots or sessionAttributes
-    const policyNumber =
-        slots?.policyNumber ||
-        sessionAttributes?.policyNumber ||
-        event?.Details?.Parameters?.policyNumber;
+    const actionGroup = event?.actionGroup;
+    const apiPath = event?.apiPath;
+    const parameters = event?.parameters || [];
+
+    // Extract policyNumber from action group parameters
+    const policyNumberParam = parameters.find(p => p.name === "policyNumber");
+    const policyNumber = policyNumberParam?.value;
 
     if (!policyNumber) {
-        return lexResponse(sessionAttributes, "Failed", {
-            contentType: "PlainText",
-            content: "I could not find your policy number. Could you please provide it again?"
+        return actionGroupResponse(actionGroup, apiPath, 400, {
+            message: "Policy number not provided"
         });
     }
 
     const result = processPolicy(policyNumber);
 
-    // Save policy number back to session attributes so Connect flow can read it
-    return lexResponse(
-        { ...sessionAttributes, policyNumber, policyStatus: result.policyStatus },
-        "Fulfilled",
-        {
-            contentType: "PlainText",
-            content: `Thank you! I found your policy. Status: ${result.policyStatus}.`
-        }
-    );
+    return actionGroupResponse(actionGroup, apiPath, 200, result);
 };
 
 function processPolicy(policyNumber) {
     // TODO: Replace with actual DB lookup or business logic
-    return { policyStatus: "Active", holder: "<customer_name>", policyNumber };
+    return {
+        policyNumber,
+        policyStatus: "Active",
+        holder: "<customer_name>"
+    };
 }
 
-function lexResponse(sessionAttributes, fulfillmentState, message) {
+function actionGroupResponse(actionGroup, apiPath, statusCode, body) {
     return {
-        sessionAttributes,
-        dialogAction: {
-            type: "Close",
-            fulfillmentState,
-            message
+        actionGroup,
+        apiPath,
+        httpStatusCode: statusCode,
+        responseBody: {
+            "application/json": {
+                body: JSON.stringify(body)
+            }
         }
     };
 }
