@@ -1,0 +1,101 @@
+{
+  "name": "PolicyAssistantBot",
+  "description": "AI Agent bot that collects a policy number from the user",
+  "roleArn": "arn:aws:iam::<account_id>:role/LexBotRole",
+  "dataPrivacy": { "childDirected": false },
+  "idleSessionTTLInSeconds": 300,
+  "botLocales": [
+    {
+      "localeId": "en_US",
+      "nluConfidenceThreshold": 0.40,
+      "description": "English locale",
+      "intents": [
+        {
+          "name": "CapturePolicyNumber",
+          "description": "Collects the policy number from the user",
+          "sampleUtterances": [
+            { "utterance": "My policy number is {policyNumber}" },
+            { "utterance": "I have policy {policyNumber}" },
+            { "utterance": "Policy {policyNumber}" },
+            { "utterance": "{policyNumber}" }
+          ],
+          "slots": [
+            {
+              "name": "policyNumber",
+              "slotTypeName": "AMAZON.AlphaNumeric",
+              "valueElicitationSetting": {
+                "slotConstraint": "Required",
+                "promptSpecification": {
+                  "messageGroups": [
+                    {
+                      "message": {
+                        "plainTextMessage": {
+                          "value": "Please provide your policy number."
+                        }
+                      }
+                    }
+                  ],
+                  "maxRetries": 3
+                }
+              }
+            }
+          ],
+          "intentConfirmationSetting": {
+            "promptSpecification": {
+              "messageGroups": [
+                {
+                  "message": {
+                    "plainTextMessage": {
+                      "value": "I have your policy number as {policyNumber}. Is that correct?"
+                    }
+                  }
+                }
+              ],
+              "maxRetries": 2
+            },
+            "declinationResponse": {
+              "messageGroups": [
+                {
+                  "message": {
+                    "plainTextMessage": {
+                      "value": "Let me ask again. Please provide your policy number."
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "fulfillmentCodeHook": { "enabled": true },
+          "dialogCodeHook": { "enabled": false }
+        },
+        {
+          "name": "FallbackIntent",
+          "description": "Handles unrecognized input using the AI agent",
+          "parentIntentSignature": "AMAZON.FallbackIntent",
+          "initialResponseSetting": {
+            "codeHook": {
+              "enableCodeHookInvocation": true,
+              "isActive": true,
+              "invocationLabel": "AI_Agent_Fallback",
+              "postCodeHookSpecification": {}
+            }
+          }
+        }
+      ],
+      "slotTypes": []
+    }
+  ],
+  "testBotAliasSettings": {
+    "botAliasLocaleSettings": {
+      "en_US": {
+        "enabled": true,
+        "codeHookSpecification": {
+          "lambdaCodeHook": {
+            "lambdaARN": "arn:aws:lambda:<region>:<account_id>:function:policy_handler",
+            "codeHookInterfaceVersion": "1.0"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "Version": "2019-10-30",
+  "StartAction": "start-chat-block",
+  "Metadata": {
+    "entryPointPosition": { "x": 20, "y": 20 },
+    "ActionMetadata": {
+      "start-chat-block":       { "position": { "x": 20,  "y": 20  } },
+      "get-customer-input":     { "position": { "x": 250, "y": 20  } },
+      "invoke-lambda":          { "position": { "x": 500, "y": 20  } },
+      "success-response":       { "position": { "x": 750, "y": 20  } },
+      "error-response":         { "position": { "x": 750, "y": 150 } },
+      "disconnect":             { "position": { "x": 1000,"y": 20  } }
+    }
+  },
+  "Actions": [
+    {
+      "Identifier": "start-chat-block",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "Welcome! I am your AI Policy Assistant. I can help you with your insurance policy."
+      },
+      "Transitions": {
+        "NextAction": "get-customer-input"
+      }
+    },
+    {
+      "Identifier": "get-customer-input",
+      "Type": "GetParticipantInput",
+      "Parameters": {
+        "Text": "Please provide your policy number to get started.",
+        "LexV2Bot": {
+          "AliasArn": "arn:aws:lex:<region>:<account_id>:bot-alias/<bot_id>/<alias_id>"
+        },
+        "Timeout": "120"
+      },
+      "Transitions": {
+        "NextAction": "invoke-lambda",
+        "Conditions": [
+          {
+            "NextAction": "invoke-lambda",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": ["$.Lex.IntentName", "CapturePolicyNumber"]
+            }
+          },
+          {
+            "NextAction": "error-response",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": ["$.Lex.IntentName", "FallbackIntent"]
+            }
+          }
+        ],
+        "Errors": [
+          { "NextAction": "error-response", "ErrorType": "NoMatchingError" },
+          { "NextAction": "error-response", "ErrorType": "TimedOut" }
+        ]
+      }
+    },
+    {
+      "Identifier": "invoke-lambda",
+      "Type": "InvokeLambdaFunction",
+      "Parameters": {
+        "LambdaFunctionARN": "arn:aws:lambda:<region>:<account_id>:function:policy_handler",
+        "InvocationTimeLimitSeconds": "8",
+        "LambdaInvocationAttributes": {
+          "policyNumber": "$.Lex.Slots.policyNumber"
+        }
+      },
+      "Transitions": {
+        "NextAction": "success-response",
+        "Errors": [
+          { "NextAction": "error-response", "ErrorType": "NoMatchingError" },
+          { "NextAction": "error-response", "ErrorType": "TimedOut" }
+        ]
+      }
+    },
+    {
+      "Identifier": "success-response",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "Thank you! Your policy has been found. Our team will assist you shortly."
+      },
+      "Transitions": {
+        "NextAction": "disconnect"
+      }
+    },
+    {
+      "Identifier": "error-response",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "I'm sorry, I could not process your request. Please try again or contact support."
+      },
+      "Transitions": {
+        "NextAction": "disconnect"
+      }
+    },
+    {
+      "Identifier": "disconnect",
+      "Type": "DisconnectParticipant",
+      "Parameters": {}
+    }
+  ]
+}
