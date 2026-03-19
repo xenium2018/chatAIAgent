@@ -61,7 +61,8 @@
         "LambdaFunctionARN": "arn:aws:lambda:<region>:<account_id>:function:policy_handler",
         "InvocationTimeLimitSeconds": "8",
         "LambdaInvocationAttributes": {
-          "policyNumber": "$.Lex.SessionAttributes.policyNumber"
+          "policyNumber": "$.Lex.SessionAttributes.policyNumber",
+          "policyStatus": "$.Lex.SessionAttributes.policyStatus"
         }
       },
       "Transitions": {
