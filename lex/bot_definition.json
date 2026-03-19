@@ -1,6 +1,6 @@
 {
   "name": "PolicyAssistantBot",
-  "description": "Lex bot with AMAZON.QnAIntent routing to Amazon Connect AI Agent",
+  "description": "Lex bot with QnAIntent and a slot to capture policy number",
   "roleArn": "arn:aws:iam::<account_id>:role/LexBotRole",
   "dataPrivacy": { "childDirected": false },
   "idleSessionTTLInSeconds": 300,
@@ -10,9 +10,31 @@
       "nluConfidenceThreshold": 0.40,
       "intents": [
         {
-          "name": "QnAIntent",
-          "description": "Routes all conversation to the Amazon Connect AI Agent",
-          "parentIntentSignature": "AMAZON.QnAIntent"
+          "name": "CapturePolicyNumber",
+          "parentIntentSignature": "AMAZON.QnAIntent",
+          "slots": [
+            {
+              "name": "policyNumber",
+              "slotTypeName": "AMAZON.AlphaNumeric",
+              "valueElicitationSetting": {
+                "slotConstraint": "Required",
+                "promptSpecification": {
+                  "messageGroups": [
+                    {
+                      "message": {
+                        "plainTextMessage": {
+                          "value": "Please provide your policy number."
+                        }
+                      }
+                    }
+                  ],
+                  "maxRetries": 3
+                }
+              }
+            }
+          ],
+          "fulfillmentCodeHook": { "enabled": false },
+          "dialogCodeHook": { "enabled": false }
         },
         {
           "name": "FallbackIntent",
@@ -23,18 +45,7 @@
   ],
   "botAliasLocaleSettings": {
     "en_US": {
-      "enabled": true,
-      "codeHookSpecification": {
-        "lambdaCodeHook": {
-          "lambdaARN": "arn:aws:lambda:<region>:<account_id>:function:policy_handler",
-          "codeHookInterfaceVersion": "1.0"
-        }
-      }
-    }
-  },
-  "qnAIntentConfiguration": {
-    "bedrockModelConfiguration": {
-      "modelArn": "arn:aws:bedrock:<region>::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0"
+      "enabled": true
     }
   }
 }

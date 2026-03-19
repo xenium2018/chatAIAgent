@@ -6,10 +6,13 @@
   "Metadata": {
     "entryPointPosition": { "x": 20, "y": 20 },
     "ActionMetadata": {
-      "11111111-1111-1111-1111-111111111001": { "position": { "x": 20,  "y": 20 } },
-      "11111111-1111-1111-1111-111111111002": { "position": { "x": 250, "y": 20 } },
-      "11111111-1111-1111-1111-111111111003": { "position": { "x": 500, "y": 20 } },
-      "11111111-1111-1111-1111-111111111004": { "position": { "x": 750, "y": 20 } }
+      "11111111-1111-1111-1111-111111111001": { "position": { "x": 20,   "y": 20  } },
+      "11111111-1111-1111-1111-111111111002": { "position": { "x": 250,  "y": 20  } },
+      "11111111-1111-1111-1111-111111111003": { "position": { "x": 500,  "y": 20  } },
+      "11111111-1111-1111-1111-111111111004": { "position": { "x": 750,  "y": 20  } },
+      "11111111-1111-1111-1111-111111111005": { "position": { "x": 1000, "y": 20  } },
+      "11111111-1111-1111-1111-111111111006": { "position": { "x": 1000, "y": 150 } },
+      "11111111-1111-1111-1111-111111111007": { "position": { "x": 1250, "y": 20  } }
     }
   },
   "Actions": [
@@ -38,17 +41,19 @@
       "Transitions": {
         "NextAction": "11111111-1111-1111-1111-111111111003",
         "Errors": [
-          { "NextAction": "11111111-1111-1111-1111-111111111003", "ErrorType": "NoMatchingError" },
-          { "NextAction": "11111111-1111-1111-1111-111111111003", "ErrorType": "TimedOut" }
+          { "NextAction": "11111111-1111-1111-1111-111111111006", "ErrorType": "NoMatchingError" },
+          { "NextAction": "11111111-1111-1111-1111-111111111006", "ErrorType": "TimedOut" }
         ],
         "Conditions": []
       }
     },
     {
       "Identifier": "11111111-1111-1111-1111-111111111003",
-      "Type": "MessageParticipant",
+      "Type": "UpdateContactAttributes",
       "Parameters": {
-        "Text": "Thank you for contacting us. Have a great day!"
+        "Attributes": {
+          "policyNumber": "$.Lex.Slots.policyNumber"
+        }
       },
       "Transitions": {
         "NextAction": "11111111-1111-1111-1111-111111111004",
@@ -58,6 +63,49 @@
     },
     {
       "Identifier": "11111111-1111-1111-1111-111111111004",
+      "Type": "InvokeLambdaFunction",
+      "Parameters": {
+        "LambdaFunctionARN": "arn:aws:lambda:<region>:<account_id>:function:policy_handler",
+        "InvocationTimeLimitSeconds": "8",
+        "LambdaInvocationAttributes": {
+          "policyNumber": "$.Attributes.policyNumber"
+        }
+      },
+      "Transitions": {
+        "NextAction": "11111111-1111-1111-1111-111111111005",
+        "Errors": [
+          { "NextAction": "11111111-1111-1111-1111-111111111006", "ErrorType": "NoMatchingError" },
+          { "NextAction": "11111111-1111-1111-1111-111111111006", "ErrorType": "TimedOut" }
+        ],
+        "Conditions": []
+      }
+    },
+    {
+      "Identifier": "11111111-1111-1111-1111-111111111005",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "Thank you! Your policy has been found and is being processed."
+      },
+      "Transitions": {
+        "NextAction": "11111111-1111-1111-1111-111111111007",
+        "Errors": [],
+        "Conditions": []
+      }
+    },
+    {
+      "Identifier": "11111111-1111-1111-1111-111111111006",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "I'm sorry, I could not process your request. Please try again or contact support."
+      },
+      "Transitions": {
+        "NextAction": "11111111-1111-1111-1111-111111111007",
+        "Errors": [],
+        "Conditions": []
+      }
+    },
+    {
+      "Identifier": "11111111-1111-1111-1111-111111111007",
       "Type": "DisconnectParticipant",
       "Parameters": {},
       "Transitions": {}
