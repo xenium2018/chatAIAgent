@@ -1,6 +1,6 @@
 {
   "name": "PolicyAssistantBot",
-  "description": "AI Agent bot using Amazon Connect AI Agent (Bedrock) to collect policy number",
+  "description": "AI Agent bot using Amazon Connect AI Agent to collect policy number",
   "roleArn": "arn:aws:iam::<account_id>:role/LexBotRole",
   "dataPrivacy": { "childDirected": false },
   "idleSessionTTLInSeconds": 300,
@@ -106,7 +106,7 @@
         },
         {
           "name": "FallbackIntent",
-          "description": "Amazon Connect AI Agent handles all other conversation using Bedrock",
+          "description": "Amazon Connect AI Agent handles all other conversation",
           "parentIntentSignature": "AMAZON.FallbackIntent",
           "initialResponseSetting": {
             "codeHook": {
@@ -130,10 +130,5 @@
         }
       }
     }
-  },
-  "aiAgentConfiguration": {
-    "type": "QNAMAKER",
-    "aiAgentResourceArn": "arn:aws:bedrock:<region>:<account_id>:agent-alias/<bedrock_agent_id>/<bedrock_agent_alias_id>",
-    "description": "Amazon Connect AI Agent powered by Amazon Bedrock for conversational policy assistance"
   }
 }

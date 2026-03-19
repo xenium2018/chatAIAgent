@@ -29,14 +29,10 @@
       "Type": "GetParticipantInput",
       "Parameters": {
         "Text": "Please tell me your policy number and I will look it up for you.",
-        "LexV2Bot": {
-          "AliasArn": "arn:aws:lex:<region>:<account_id>:bot-alias/<bot_id>/<alias_id>"
-        },
-        "Timeout": "120",
         "AIAgent": {
           "Type": "SELF_SERVICE",
           "SelfServiceAIAgentId": "<connect_ai_agent_id>"
-        }
+        },
       },
       "Transitions": {
         "NextAction": "set-policy-number",
