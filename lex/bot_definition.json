@@ -1,6 +1,6 @@
 {
   "name": "PolicyAssistantBot",
-  "description": "Lex bot with QnAIntent and a slot to capture policy number",
+  "description": "Lex bot with QnAIntent for AI Agent and CapturePolicyNumber intent for slot capture",
   "roleArn": "arn:aws:iam::<account_id>:role/LexBotRole",
   "dataPrivacy": { "childDirected": false },
   "idleSessionTTLInSeconds": 300,
@@ -10,8 +10,18 @@
       "nluConfidenceThreshold": 0.40,
       "intents": [
         {
+          "name": "QnAIntent",
+          "description": "AI Agent handles conversation and guides user to provide policy number",
+          "parentIntentSignature": "AMAZON.QnAIntent"
+        },
+        {
           "name": "CapturePolicyNumber",
-          "parentIntentSignature": "AMAZON.QnAIntent",
+          "description": "Captures the policy number once user provides it",
+          "sampleUtterances": [
+            { "utterance": "My policy number is {policyNumber}" },
+            { "utterance": "It is {policyNumber}" },
+            { "utterance": "{policyNumber}" }
+          ],
           "slots": [
             {
               "name": "policyNumber",
