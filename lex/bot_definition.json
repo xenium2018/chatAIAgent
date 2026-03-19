@@ -1,6 +1,6 @@
 {
   "name": "PolicyAssistantBot",
-  "description": "AI Agent bot using Amazon Connect AI Agent to collect policy number",
+  "description": "Lex bot with AMAZON.QnAIntent routing to Amazon Connect AI Agent",
   "roleArn": "arn:aws:iam::<account_id>:role/LexBotRole",
   "dataPrivacy": { "childDirected": false },
   "idleSessionTTLInSeconds": 300,
@@ -8,111 +8,15 @@
     {
       "localeId": "en_US",
       "nluConfidenceThreshold": 0.40,
-      "generativeAISettings": {
-        "buildtimeSettings": {
-          "descriptiveBotBuilder": { "enabled": true },
-          "sampleUtteranceGeneration": { "enabled": true }
-        },
-        "runtimeSettings": {
-          "slotResolutionImprovement": { "enabled": true }
-        }
-      },
       "intents": [
         {
-          "name": "CapturePolicyNumber",
-          "description": "AI Agent collects the policy number conversationally",
-          "sampleUtterances": [
-            { "utterance": "I need help with my policy" },
-            { "utterance": "Check my policy" },
-            { "utterance": "My policy number is {policyNumber}" },
-            { "utterance": "{policyNumber}" }
-          ],
-          "slots": [
-            {
-              "name": "policyNumber",
-              "slotTypeName": "AMAZON.AlphaNumeric",
-              "description": "The customer's insurance policy number",
-              "valueElicitationSetting": {
-                "slotConstraint": "Required",
-                "slotCaptureSetting": {
-                  "captureConditional": {},
-                  "captureResponse": {
-                    "messageGroups": [
-                      {
-                        "message": {
-                          "plainTextMessage": {
-                            "value": "Got it! I have your policy number as {policyNumber}."
-                          }
-                        }
-                      }
-                    ]
-                  },
-                  "failureResponse": {
-                    "messageGroups": [
-                      {
-                        "message": {
-                          "plainTextMessage": {
-                            "value": "I didn't catch that. Could you please repeat your policy number?"
-                          }
-                        }
-                      }
-                    ]
-                  }
-                },
-                "promptSpecification": {
-                  "messageGroups": [
-                    {
-                      "message": {
-                        "plainTextMessage": {
-                          "value": "Sure, I can help with that. Could you please provide your policy number?"
-                        }
-                      }
-                    }
-                  ],
-                  "maxRetries": 3,
-                  "allowInterrupt": true
-                }
-              }
-            }
-          ],
-          "intentConfirmationSetting": {
-            "promptSpecification": {
-              "messageGroups": [
-                {
-                  "message": {
-                    "plainTextMessage": {
-                      "value": "Just to confirm, your policy number is {policyNumber}. Is that correct?"
-                    }
-                  }
-                }
-              ],
-              "maxRetries": 2,
-              "allowInterrupt": true
-            },
-            "declinationResponse": {
-              "messageGroups": [
-                {
-                  "message": {
-                    "plainTextMessage": {
-                      "value": "No problem, let me ask again. Please provide your policy number."
-                    }
-                  }
-                }
-              ]
-            }
-          },
-          "fulfillmentCodeHook": { "enabled": true },
-          "dialogCodeHook": { "enabled": false }
+          "name": "QnAIntent",
+          "description": "Routes all conversation to the Amazon Connect AI Agent",
+          "parentIntentSignature": "AMAZON.QnAIntent"
         },
         {
           "name": "FallbackIntent",
-          "description": "Fallback to AI Agent for unrecognized input",
           "parentIntentSignature": "AMAZON.FallbackIntent"
-        },
-        {
-          "name": "QnAIntent",
-          "description": "AI Agent intent powered by Amazon Connect AI Agent",
-          "parentIntentSignature": "AMAZON.QnAIntent"
         }
       ]
     }
@@ -129,9 +33,6 @@
     }
   },
   "qnAIntentConfiguration": {
-    "dataSourceConfiguration": {
-      "kendraConfiguration": null
-    },
     "bedrockModelConfiguration": {
       "modelArn": "arn:aws:bedrock:<region>::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0"
     }

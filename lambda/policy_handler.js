@@ -1,5 +1,8 @@
 exports.handler = async (event) => {
-    const policyNumber = event?.Details?.Parameters?.policyNumber;
+    // AI Agent stores extracted entities in sessionAttributes
+    const policyNumber =
+        event?.sessionAttributes?.policyNumber ||
+        event?.Details?.Parameters?.policyNumber;
 
     if (!policyNumber) {
         return { status: "error", message: "Policy number not provided" };
